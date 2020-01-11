@@ -1,1 +1,43 @@
-这就是我
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>LIVIST</title>
+    <meta author="Max">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css">
+    <style>
+        body {background-color: rgb(120,120,120);}
+        .one {
+            text-align: center;
+            color: white;
+            font-size: 50px;
+            background-color: rgb(60, 60, 60);
+        }
+        .bilibili{
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 75%;
+        }
+        .bilibili iframe {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+            top: 0;
+        }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="one">
+        首页 文章 关于我
+      </nav>
+    </header>
+    <div class="bilibili">
+        <iframe src="http://player.bilibili.com/player.html?aid=69839224&cid=121019525&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+    </div>
+  </body>
+</html>
