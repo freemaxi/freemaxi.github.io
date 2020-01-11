@@ -4,7 +4,15 @@
     font-size: 40px;
     background-color: rgb(60, 60, 60);
 }
-ul {
+p {
     color:white;
     font-size: 20px;
+}
+.copyright {
+    text-align: center;
+    color: white;
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    margin-left: -100px;
 }
