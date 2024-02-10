@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://3000.world/</loc>
+    <lastmod>2024-02-10T16:34:11+08:00</lastmod>
+  </url><url>
+    <loc>https://3000.world/posts/20240210/</loc>
+    <lastmod>2024-02-10T16:34:11+08:00</lastmod>
+  </url><url>
+    <loc>https://3000.world/posts/</loc>
+    <lastmod>2024-02-10T16:34:11+08:00</lastmod>
+  </url><url>
     <loc>https://3000.world/archives/</loc>
     <lastmod>2019-05-28T00:00:00+00:00</lastmod>
   </url><url>
@@ -10,8 +19,6 @@
   </url><url>
     <loc>https://3000.world/contact/</loc>
     <lastmod>2019-02-28T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://3000.world/</loc>
   </url><url>
     <loc>https://3000.world/categories/</loc>
   </url><url>
