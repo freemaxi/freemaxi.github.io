@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>index on Max</title>
-    <link>https://hugo-paper.vercel.app/tags/index/</link>
+    <link>https://3000.world/tags/index/</link>
     <description>Recent content in index on Max</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>Copyright © 1997–2024, all rights reserved.</copyright>
-    <atom:link href="https://hugo-paper.vercel.app/tags/index/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://3000.world/tags/index/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Posts</title>
-      <link>https://hugo-paper.vercel.app/post/</link>
+      <link>https://3000.world/post/</link>
       <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/post/</guid>
+      <guid>https://3000.world/post/</guid>
       <description></description>
     </item>
   </channel>

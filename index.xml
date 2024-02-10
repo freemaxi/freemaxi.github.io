@@ -2,46 +2,46 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Max</title>
-    <link>https://hugo-paper.vercel.app/</link>
+    <link>https://3000.world/</link>
     <description>Recent content on Max</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>Copyright © 1997–2024, all rights reserved.</copyright>
     <lastBuildDate>Tue, 28 May 2019 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://hugo-paper.vercel.app/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://3000.world/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title></title>
-      <link>https://hugo-paper.vercel.app/archives/</link>
+      <link>https://3000.world/archives/</link>
       <pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/archives/</guid>
+      <guid>https://3000.world/archives/</guid>
       <description></description>
     </item>
     <item>
       <title>Markdown Syntax Guide</title>
-      <link>https://hugo-paper.vercel.app/post/markdown-syntax/</link>
+      <link>https://3000.world/post/markdown-syntax/</link>
       <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/post/markdown-syntax/</guid>
+      <guid>https://3000.world/post/markdown-syntax/</guid>
       <description>&lt;p&gt;This article offers a sample of basic Markdown syntax that can be used in Hugo content files, also it shows whether basic HTML elements are decorated with CSS in a Hugo theme.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Emoji Support</title>
-      <link>https://hugo-paper.vercel.app/post/emoji-support/</link>
+      <link>https://3000.world/post/emoji-support/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/post/emoji-support/</guid>
+      <guid>https://3000.world/post/emoji-support/</guid>
       <description>&lt;p&gt;Emoji can be enabled in a Hugo project in a number of ways.&lt;/p&gt;</description>
     </item>
     <item>
       <title>About</title>
-      <link>https://hugo-paper.vercel.app/about/</link>
+      <link>https://3000.world/about/</link>
       <pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/about/</guid>
+      <guid>https://3000.world/about/</guid>
       <description>Written in Go, Hugo is an open source static site generator available under the Apache Licence 2.0. Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.&#xA;Hugo makes use of a variety of open source projects including:&#xA;https://github.com/yuin/goldmark https://github.</description>
     </item>
     <item>
       <title>Contact</title>
-      <link>https://hugo-paper.vercel.app/contact/</link>
+      <link>https://3000.world/contact/</link>
       <pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://hugo-paper.vercel.app/contact/</guid>
+      <guid>https://3000.world/contact/</guid>
       <description> github.com/nanxiaobei lee.so </description>
     </item>
   </channel>
