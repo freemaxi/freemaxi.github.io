@@ -14,7 +14,7 @@
       <link>https://3000.world/posts/20240210/</link>
       <pubDate>Sat, 10 Feb 2024 16:34:11 +0800</pubDate>
       <guid>https://3000.world/posts/20240210/</guid>
-      <description>test2</description>
+      <description>test&#xA;test </description>
     </item>
     <item>
       <title></title>
@@ -22,20 +22,6 @@
       <pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate>
       <guid>https://3000.world/archives/</guid>
       <description></description>
-    </item>
-    <item>
-      <title>About</title>
-      <link>https://3000.world/about/</link>
-      <pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://3000.world/about/</guid>
-      <description>Written in Go, Hugo is an open source static site generator available under the Apache Licence 2.0. Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.&#xA;Hugo makes use of a variety of open source projects including:&#xA;https://github.com/yuin/goldmark https://github.</description>
-    </item>
-    <item>
-      <title>Contact</title>
-      <link>https://3000.world/contact/</link>
-      <pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://3000.world/contact/</guid>
-      <description> github.com/nanxiaobei lee.so </description>
     </item>
   </channel>
 </rss>
