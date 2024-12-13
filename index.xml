@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Max</title>
+    <link>https://3000.world/</link>
+    <description>Recent content on Max</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 13 Dec 2024 18:17:59 +0800</lastBuildDate>
+    <atom:link href="https://3000.world/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Hello World</title>
+      <link>https://3000.world/blog/hello-world/</link>
+      <pubDate>Fri, 13 Dec 2024 18:17:59 +0800</pubDate>
+      <guid>https://3000.world/blog/hello-world/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

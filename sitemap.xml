@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://3000.world/blog/</loc>
+    <lastmod>2024-12-13T18:17:59+08:00</lastmod>
+  </url><url>
+    <loc>https://3000.world/blog/hello-world/</loc>
+    <lastmod>2024-12-13T18:17:59+08:00</lastmod>
+  </url><url>
+    <loc>https://3000.world/</loc>
+    <lastmod>2024-12-13T18:17:59+08:00</lastmod>
+  </url><url>
+    <loc>https://3000.world/categories/</loc>
+  </url><url>
+    <loc>https://3000.world/series/</loc>
+  </url><url>
+    <loc>https://3000.world/tags/</loc>
+  </url>
+</urlset>
