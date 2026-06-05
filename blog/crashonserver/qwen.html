@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux 无 root 权限运行 CrashCore 并让命令行走代理</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-code: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-orange: #d29922;
+    --accent-red: #f85149;
+    --accent-purple: #bc8cff;
+    --code-keyword: #ff7b72;
+    --code-string: #a5d6ff;
+    --code-comment: #8b949e;
+    --inline-code-bg: #282e38;
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a1e2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3.5rem 1.5rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(88,166,255,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(188,140,255,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+  }
+  .hero .subtitle {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    max-width: 1340px;
+    margin: 0 auto;
+    gap: 0;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2rem 1.25rem;
+    border-right: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .sidebar h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar ol {
+    list-style: none;
+    counter-reset: toc;
+  }
+  .sidebar ol li {
+    counter-increment: toc;
+    margin-bottom: 2px;
+  }
+  .sidebar ol li a {
+    display: block;
+    padding: 0.4rem 0.7rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    position: relative;
+    padding-left: 2rem;
+  }
+  .sidebar ol li a::before {
+    content: counter(toc);
+    position: absolute;
+    left: 0.7rem;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+  .sidebar ol li a:hover {
+    color: var(--text);
+    background: rgba(88,166,255,0.08);
+  }
+  .sidebar ol li a.active {
+    color: var(--accent);
+    background: rgba(88,166,255,0.12);
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    min-width: 0;
+    padding: 2.5rem 3rem 4rem;
+  }
+
+  /* ── Scenario Box ── */
+  .scenario-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .scenario-box h2 {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .scenario-box ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .scenario-box ul li {
+    background: rgba(88,166,255,0.08);
+    border: 1px solid rgba(88,166,255,0.15);
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+
+  .info-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+  .info-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.5rem;
+  }
+  .info-card .label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+  }
+  .info-card .value {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    font-size: 0.95rem;
+    color: var(--accent-green);
+    word-break: break-all;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 3rem;
+  }
+  .section h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    scroll-margin-top: 1rem;
+  }
+  .section h2 .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .section p {
+    margin-bottom: 1rem;
+    color: var(--text);
+    line-height: 1.8;
+  }
+  .section p a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent);
+    transition: border-color 0.2s;
+  }
+  .section p a:hover {
+    border-bottom-style: solid;
+  }
+
+  /* ── Code Blocks ── */
+  .code-block {
+    position: relative;
+    margin: 1rem 0 1.25rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-code);
+  }
+  .code-block .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-block .code-lang {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: "JetBrains Mono", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .code-block .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .code-block .copy-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(88,166,255,0.06);
+  }
+  .code-block .copy-btn.copied {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+  }
+  .code-block pre {
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    color: var(--text);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .code-block pre::-webkit-scrollbar { height: 6px; }
+  .code-block pre::-webkit-scrollbar-track { background: transparent; }
+  .code-block pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Syntax colors */
+  .code-block .kw { color: var(--code-keyword); }
+  .code-block .str { color: var(--code-string); }
+  .code-block .cmt { color: var(--code-comment); font-style: italic; }
+  .code-block .fn { color: var(--accent-orange); }
+  .code-block .flag { color: var(--accent-purple); }
+  .code-block .var { color: #ffa657; }
+  .code-block .url { color: var(--accent-green); }
+  .code-block .path { color: #79c0ff; }
+
+  /* ── Inline Code ── */
+  code:not(pre code) {
+    background: var(--inline-code-bg);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+    color: var(--accent-orange);
+    border: 1px solid var(--border);
+  }
+
+  /* ── Alert / Warning / Tip boxes ── */
+  .alert {
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0 1.25rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .alert .icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .alert-info {
+    background: rgba(88,166,255,0.08);
+    border: 1px solid rgba(88,166,255,0.2);
+    color: #79c0ff;
+  }
+  .alert-warn {
+    background: rgba(210,153,34,0.08);
+    border: 1px solid rgba(210,153,34,0.25);
+    color: var(--accent-orange);
+  }
+  .alert-tip {
+    background: rgba(63,185,80,0.08);
+    border: 1px solid rgba(63,185,80,0.2);
+    color: var(--accent-green);
+  }
+  .alert-danger {
+    background: rgba(248,81,73,0.08);
+    border: 1px solid rgba(248,81,73,0.2);
+    color: var(--accent-red);
+  }
+
+  /* ── Arch table ── */
+  .arch-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 1.25rem;
+    font-size: 0.9rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .arch-table th, .arch-table td {
+    padding: 0.65rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .arch-table th {
+    background: rgba(88,166,255,0.06);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .arch-table tr:last-child td { border-bottom: none; }
+  .arch-table td:first-child {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--accent-green);
+    font-weight: 500;
+  }
+  .arch-table td:last-child {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* ── Key Points Card ── */
+  .key-points {
+    background: linear-gradient(135deg, rgba(88,166,255,0.06), rgba(188,140,255,0.04));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+    margin: 2.5rem 0;
+  }
+  .key-points h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .key-points ol {
+    padding-left: 1.5rem;
+  }
+  .key-points ol li {
+    margin-bottom: 0.6rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ── Divider ── */
+  hr {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 2rem 0;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 1.5rem 1.25rem 3rem; }
+    .hero h1 { font-size: 1.6rem; }
+    .section h2 { font-size: 1.25rem; }
+    .info-row { flex-direction: column; }
+  }
+
+  /* ── Scrollbar ── */
+  body::-webkit-scrollbar { width: 8px; }
+  body::-webkit-scrollbar-track { background: var(--bg); }
+  body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .sidebar::-webkit-scrollbar { width: 5px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* back to top */
+  .back-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 42px;
+    height: 42px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    z-index: 100;
+    text-decoration: none;
+  }
+  .back-top.show { opacity: 1; }
+  .back-top:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(88,166,255,0.06);
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== HERO ====== -->
+<header class="hero">
+  <h1>🐧 Linux 无 root 权限运行 CrashCore</h1>
+  <p class="subtitle">并让 curl、git、npm、安装脚本等命令行工具走代理 —— 普通用户完整指南</p>
+</header>
+
+<!-- ====== LAYOUT ====== -->
+<div class="layout">
+
+  <!-- Sidebar TOC -->
+  <nav class="sidebar" id="sidebar">
+    <h3>📑 目录导航</h3>
+    <ol>
+      <li><a href="#s1">创建工作目录</a></li>
+      <li><a href="#s2">下载 CrashCore 二进制文件</a></li>
+      <li><a href="#s3">下载 country.mmdb</a></li>
+      <li><a href="#s4">准备 scnet.yaml</a></li>
+      <li><a href="#s5">本地提前改好端口</a></li>
+      <li><a href="#s6">手动启动测试</a></li>
+      <li><a href="#s7">设置当前终端代理</a></li>
+      <li><a href="#s8">用代理安装 Codex CLI</a></li>
+      <li><a href="#s9">常用命令汇总</a></li>
+      <li><a href="#s10">最小完整流程</a></li>
+      <li><a href="#s11">核心记住</a></li>
+    </ol>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Scenario -->
+    <div class="scenario-box">
+      <h2>🎯 适用场景</h2>
+      <ul>
+        <li>普通 Linux 用户</li>
+        <li>没有 root 权限</li>
+        <li>想在服务器上运行 CrashCore / Mihomo</li>
+        <li>想让 curl、git、npm、安装脚本等走代理</li>
+      </ul>
+    </div>
+
+    <div class="info-row">
+      <div class="info-card">
+        <div class="label">📁 工作目录</div>
+        <div class="value">/public/home/freemax/clash</div>
+      </div>
+      <div class="info-card">
+        <div class="label">🔌 代理端口示例</div>
+        <div class="value">7893</div>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="icon">💡</span>
+      <div>如果你的端口不是 <code>7893</code>，把文中的 <code>7893</code> 换成你的 <code>mixed-port</code> 端口即可。</div>
+    </div>
+
+    <hr>
+
+    <!-- ========== Section 1 ========== -->
+    <section class="section" id="s1">
+      <h2><span class="step-num">1</span> 创建工作目录</h2>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">mkdir</span> <span class="flag">-p</span> <span class="path">/public/home/freemax/clash</span>
+<span class="fn">cd</span> <span class="path">/public/home/freemax/clash</span></pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 2 ========== -->
+    <section class="section" id="s2">
+      <h2><span class="step-num">2</span> 下载 CrashCore 二进制文件</h2>
+      <p>你的服务器是 Linux x86_64，所以使用 <code>clash-linux-amd64.tar.gz</code>。</p>
+
+      <p>GitHub 页面地址：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">text</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre>https://github.com/juewuy/ShellCrash/blob/update/bin/meta/clash-linux-amd64.tar.gz</pre>
+      </div>
+
+      <p>但 <code>curl</code> 不能直接下载 <code>blob</code> 页面，要用 <strong>raw</strong> 地址：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> CrashCore.tar.gz \
+  <span class="url">https://raw.githubusercontent.com/juewuy/ShellCrash/update/bin/meta/clash-linux-amd64.tar.gz</span></pre>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="icon">⚡</span>
+        <div>如果 GitHub raw 下载慢，可以用 CDN：</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> CrashCore.tar.gz \
+  <span class="url">https://testingcf.jsdelivr.net/gh/juewuy/ShellCrash@update/bin/meta/clash-linux-amd64.tar.gz</span></pre>
+      </div>
+
+      <p>解压：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">tar</span> <span class="flag">-zxf</span> CrashCore.tar.gz</pre>
+      </div>
+
+      <p>赋予执行权限：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">chmod</span> <span class="flag">+x</span> CrashCore</pre>
+      </div>
+
+      <p>检查：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">ls</span> <span class="flag">-lh</span> CrashCore</pre>
+      </div>
+
+      <div class="alert alert-info">
+        <span class="icon">🔍</span>
+        <div>如果不知道服务器架构，先执行 <code>uname -m</code> 查看。</div>
+      </div>
+
+      <table class="arch-table">
+        <thead>
+          <tr><th>架构 (uname -m)</th><th>对应下载包</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>x86_64</td><td>clash-linux-amd64.tar.gz</td></tr>
+          <tr><td>aarch64</td><td>clash-linux-arm64.tar.gz</td></tr>
+          <tr><td>armv7l</td><td>clash-linux-armv7.tar.gz</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ========== Section 3 ========== -->
+    <section class="section" id="s3">
+      <h2><span class="step-num">3</span> 下载 country.mmdb</h2>
+      <p>CrashCore / Mihomo 启动时可能会提示：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">text</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre>Can't find MMDB, start download</pre>
+      </div>
+      <p>如果服务器下载慢，可以提前手动下载 <code>country.mmdb</code>。</p>
+
+      <p>推荐 CDN 地址：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> country.mmdb \
+  <span class="url">https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb</span></pre>
+      </div>
+
+      <p>或者 GitHub release 地址：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> country.mmdb \
+  <span class="url">https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb</span></pre>
+      </div>
+
+      <p>检查：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">ls</span> <span class="flag">-lh</span> country.mmdb</pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 4 ========== -->
+    <section class="section" id="s4">
+      <h2><span class="step-num">4</span> 准备 scnet.yaml</h2>
+      <p>最简单的方式：</p>
+      <div class="alert alert-tip">
+        <span class="icon">✅</span>
+        <div>
+          在本地电脑下载机场 Clash / Mihomo 订阅 → 在本地把 <code>mixed-port</code> 改好 → 配置文件命名为 <code>scnet.yaml</code> → 上传到服务器
+        </div>
+      </div>
+
+      <p>上传：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">scp</span> scnet.yaml freemax@login07:<span class="path">/public/home/freemax/clash/</span></pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 5 ========== -->
+    <section class="section" id="s5">
+      <h2><span class="step-num">5</span> 本地提前改好端口</h2>
+      <p>在本地编辑 <code>scnet.yaml</code>，确认里面有：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">yaml</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="var">mixed-port</span>: <span class="str">7893</span></pre>
+      </div>
+
+      <p>建议也加上：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">yaml</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="var">ipv6</span>: <span class="kw">false</span></pre>
+      </div>
+
+      <p>控制端口可以保留，例如：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">yaml</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="var">external-controller</span>: <span class="str">'127.0.0.1:9091'</span></pre>
+      </div>
+
+      <div class="alert alert-warn">
+        <span class="icon">⚠️</span>
+        <div>最终你上传到服务器的配置文件里，至少应该确认有 <code>mixed-port: 7893</code> 和 <code>ipv6: false</code>。</div>
+      </div>
+    </section>
+
+    <!-- ========== Section 6 ========== -->
+    <section class="section" id="s6">
+      <h2><span class="step-num">6</span> 手动启动测试</h2>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="path">/public/home/freemax/clash/CrashCore</span> \
+  <span class="flag">-d</span> <span class="path">/public/home/freemax/clash</span> \
+  <span class="flag">-f</span> <span class="path">/public/home/freemax/clash/scnet.yaml</span></pre>
+      </div>
+
+      <p>看到类似输出说明配置加载成功：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">text</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre>Initial configuration complete</pre>
+      </div>
+
+      <div class="alert alert-info">
+        <span class="icon">📌</span>
+        <div>如果看到 <code>The `global-client-fingerprint` configuration is deprecated</code> —— 这是警告，不影响使用。</div>
+      </div>
+
+      <div class="alert alert-danger">
+        <span class="icon">🚫</span>
+        <div>如果看到 <code>bind: address already in use</code> —— 说明端口被占用了，需要换一个 <code>mixed-port</code>，比如 <code>7893</code>、<code>8970</code>、<code>17890</code> 等。</div>
+      </div>
+    </section>
+
+    <!-- ========== Section 7 ========== -->
+    <section class="section" id="s7">
+      <h2><span class="step-num">7</span> 设置当前终端代理</h2>
+      <p>如果只想让当前终端走代理：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="kw">export</span> <span class="var">http_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">https_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">all_proxy</span>=<span class="url">http://127.0.0.1:7893</span></pre>
+      </div>
+
+      <p>测试：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> ipinfo.io</pre>
+      </div>
+
+      <p>取消代理：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="kw">unset</span> <span class="var">http_proxy</span> <span class="var">https_proxy</span> <span class="var">all_proxy</span></pre>
+      </div>
+
+      <div class="alert alert-warn">
+        <span class="icon">⚠️</span>
+        <div>
+          <code>curl -x http://127.0.0.1:7893 ...</code> 只对当前这条 <code>curl</code> 生效。而 <code>export http_proxy=...</code> 会让当前终端里的后续命令也走代理。
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Section 8 ========== -->
+    <section class="section" id="s8">
+      <h2><span class="step-num">8</span> 用代理安装 Codex CLI</h2>
+
+      <div class="alert alert-danger">
+        <span class="icon">❌</span>
+        <div>
+          不要只写下面这种 —— 只代理了第一层 <code>curl</code>，安装脚本内部继续下载时可能不会走代理：
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="cmt"># ❌ 不推荐</span>
+<span class="fn">curl</span> <span class="flag">-x</span> <span class="url">http://127.0.0.1:7893</span> <span class="flag">-fsSL</span> <span class="url">https://chatgpt.com/codex/install.sh</span> | <span class="fn">sh</span></pre>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="icon">✅</span>
+        <div>推荐先设置环境变量，再下载脚本，再执行：</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="cmt"># 1. 设置代理环境变量</span>
+<span class="kw">export</span> <span class="var">http_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">https_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">all_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+
+<span class="cmt"># 2. 下载安装脚本</span>
+<span class="fn">curl</span> <span class="flag">-fsSL</span> <span class="url">https://chatgpt.com/codex/install.sh</span> <span class="flag">-o</span> install.sh
+
+<span class="cmt"># 3. 执行安装脚本（内部下载也会走代理）</span>
+<span class="fn">sh</span> install.sh</pre>
+      </div>
+
+      <div class="alert alert-info">
+        <span class="icon">💡</span>
+        <div>
+          如果下载中途出现 <code>curl: (35) Encountered end of file</code>，可以试试强制 HTTP/1.1：
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="fn">curl</span> <span class="flag">--http1.1</span> <span class="flag">-fsSL</span> <span class="url">https://chatgpt.com/codex/install.sh</span> <span class="flag">-o</span> install.sh
+<span class="fn">sh</span> install.sh</pre>
+      </div>
+
+      <p>安装完成后，如果不想继续让终端走代理：</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="kw">unset</span> <span class="var">http_proxy</span> <span class="var">https_proxy</span> <span class="var">all_proxy</span></pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 9 ========== -->
+    <section class="section" id="s9">
+      <h2><span class="step-num">9</span> 常用命令汇总</h2>
+
+      <p>进入目录：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="fn">cd</span> <span class="path">/public/home/freemax/clash</span></pre>
+      </div>
+
+      <p>前台启动：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="path">/public/home/freemax/clash/CrashCore</span> \
+  <span class="flag">-d</span> <span class="path">/public/home/freemax/clash</span> \
+  <span class="flag">-f</span> <span class="path">/public/home/freemax/clash/scnet.yaml</span></pre>
+      </div>
+
+      <p>强制停止：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="fn">pkill</span> <span class="flag">-f</span> CrashCore</pre>
+      </div>
+
+      <p>查看是否运行：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="fn">pgrep</span> <span class="flag">-af</span> CrashCore</pre>
+      </div>
+
+      <p>测试代理：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="fn">curl</span> <span class="flag">-x</span> <span class="url">http://127.0.0.1:7893</span> ipinfo.io</pre>
+      </div>
+
+      <p>设置代理：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="kw">export</span> <span class="var">http_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">https_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">all_proxy</span>=<span class="url">http://127.0.0.1:7893</span></pre>
+      </div>
+
+      <p>取消代理：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="kw">unset</span> <span class="var">http_proxy</span> <span class="var">https_proxy</span> <span class="var">all_proxy</span></pre>
+      </div>
+
+      <p>安装 Codex CLI：</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">📋 复制</button></div>
+<pre><span class="kw">export</span> <span class="var">http_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">https_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">all_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+
+<span class="fn">curl</span> <span class="flag">-fsSL</span> <span class="url">https://chatgpt.com/codex/install.sh</span> <span class="flag">-o</span> install.sh
+<span class="fn">sh</span> install.sh</pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 10 ========== -->
+    <section class="section" id="s10">
+      <h2><span class="step-num">10</span> 最小完整流程</h2>
+      <p>复制下面这一整块，从头到尾执行即可完成全部配置：</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">bash — 完整流程</span>
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+        </div>
+<pre><span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 1. 创建 CrashCore 工作目录</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="fn">mkdir</span> <span class="flag">-p</span> <span class="path">/public/home/freemax/clash</span>
+<span class="fn">cd</span> <span class="path">/public/home/freemax/clash</span>
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 2. 下载 CrashCore 二进制压缩包</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> CrashCore.tar.gz \
+  <span class="url">https://testingcf.jsdelivr.net/gh/juewuy/ShellCrash@update/bin/meta/clash-linux-amd64.tar.gz</span>
+
+<span class="cmt"># 解压</span>
+<span class="fn">tar</span> <span class="flag">-zxf</span> CrashCore.tar.gz
+
+<span class="cmt"># 添加执行权限</span>
+<span class="fn">chmod</span> <span class="flag">+x</span> CrashCore
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 3. 下载 country.mmdb</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="fn">curl</span> <span class="flag">-L</span> <span class="flag">-o</span> country.mmdb \
+  <span class="url">https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb</span>
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 4. 上传或准备 scnet.yaml</span>
+<span class="cmt">#    在本地提前改好：</span>
+<span class="cmt">#      mixed-port: 7893</span>
+<span class="cmt">#      ipv6: false</span>
+<span class="cmt">#    然后上传：</span>
+<span class="cmt">#      scp scnet.yaml freemax@login07:/public/home/freemax/clash/</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="cmt"># 检查文件</span>
+<span class="fn">ls</span> <span class="flag">-lh</span>
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 5. 前台启动 CrashCore</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="path">/public/home/freemax/clash/CrashCore</span> \
+  <span class="flag">-d</span> <span class="path">/public/home/freemax/clash</span> \
+  <span class="flag">-f</span> <span class="path">/public/home/freemax/clash/scnet.yaml</span>
+
+<span class="cmt"># 看到 "Initial configuration complete" 即成功</span>
+<span class="cmt"># 停止：另开终端执行 pkill -f CrashCore</span>
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 6. 设置当前终端代理</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="kw">export</span> <span class="var">http_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">https_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+<span class="kw">export</span> <span class="var">all_proxy</span>=<span class="url">http://127.0.0.1:7893</span>
+
+<span class="cmt"># 测试代理</span>
+<span class="fn">curl</span> ipinfo.io
+
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="cmt"># 7. 用代理安装 Codex CLI</span>
+<span class="cmt"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="fn">curl</span> <span class="flag">-fsSL</span> <span class="url">https://chatgpt.com/codex/install.sh</span> <span class="flag">-o</span> install.sh
+<span class="fn">sh</span> install.sh
+
+<span class="cmt"># 安装完成后取消代理</span>
+<span class="kw">unset</span> <span class="var">http_proxy</span> <span class="var">https_proxy</span> <span class="var">all_proxy</span></pre>
+      </div>
+    </section>
+
+    <!-- ========== Section 11 ========== -->
+    <section class="section" id="s11">
+      <h2><span class="step-num">11</span> 核心记住</h2>
+      <div class="key-points">
+        <h2>🧠 五条核心要点</h2>
+        <ol>
+          <li><code>scnet.yaml</code> 在本地改好再上传，最省事</li>
+          <li>CrashCore 端口看 <code>mixed-port</code></li>
+          <li>命令行代理用 <code>export http_proxy / https_proxy / all_proxy</code></li>
+          <li><code>curl -x</code> 只代理当前 curl，不一定代理脚本内部的二次下载</li>
+          <li>安装 Codex 这类脚本时，优先用 <code>export</code> 方式</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer class="footer">
+      📄 Linux 无 root 权限运行 CrashCore 完整指南 &nbsp;|&nbsp; 适用于普通服务器用户
+    </footer>
+
+  </main>
+</div>
+
+<!-- Back to Top -->
+<a href="#" class="back-top" id="backTop" title="回到顶部">↑</a>
+
+<script>
+// ── Copy to Clipboard ──
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 复制';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── Back to Top ──
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+  backTop.classList.toggle('show', window.scrollY > 400);
+});
+
+// ── Active TOC highlight ──
+const tocLinks = document.querySelectorAll('.sidebar ol li a');
+const sections = document.querySelectorAll('.section[id]');
+
+function updateToc() {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.offsetTop - 120;
+    if (window.scrollY >= top) {
+      current = sec.getAttribute('id');
+    }
+  });
+  tocLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateToc);
+updateToc();
+</script>
+</body>
+</html>
