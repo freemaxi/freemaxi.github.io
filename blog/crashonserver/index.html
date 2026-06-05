@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Linux 无 root 权限运行 CrashCore 并让命令行走代理</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #e5e7eb;
+      --code-bg: #0b1020;
+      --code-text: #e5e7eb;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --note: #eff6ff;
+      --warn: #fff7ed;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background: #f8fafc;
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--bg), #1e3a8a);
+      color: white;
+      padding: 56px 20px 44px;
+    }
+
+    .hero {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      color: #dbeafe;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      color: #dbeafe;
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .layout {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 20px 70px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    nav {
+      position: sticky;
+      top: 20px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .06);
+    }
+
+    nav strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    nav a {
+      display: block;
+      color: #334155;
+      text-decoration: none;
+      padding: 7px 0;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    section {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 26px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .05);
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 22px 0 12px;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 12px 0;
+    }
+
+    ul {
+      padding-left: 22px;
+    }
+
+    .note {
+      background: var(--note);
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: #1e3a8a;
+      margin: 14px 0;
+    }
+
+    .warn {
+      background: var(--warn);
+      border: 1px solid #fed7aa;
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: #9a3412;
+      margin: 14px 0;
+    }
+
+    code.inline {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .95em;
+    }
+
+    .code-wrap {
+      position: relative;
+      margin: 14px 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--code-bg);
+      border: 1px solid #1f2937;
+    }
+
+    .code-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #111827;
+      color: #cbd5e1;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .copy-btn {
+      appearance: none;
+      border: 0;
+      background: var(--accent);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .summary-card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      padding: 16px;
+      color: #dbeafe;
+    }
+
+    .summary-card b {
+      display: block;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    footer {
+      color: var(--muted);
+      text-align: center;
+      padding: 28px 20px 50px;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        position: static;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 22px;
+      }
+    }
+
+    @media print {
+      header {
+        background: white;
+        color: black;
+        padding: 20px 0;
+      }
+
+      .subtitle, .badge, nav, .copy-btn, footer {
+        display: none;
+      }
+
+      body {
+        background: white;
+      }
+
+      .layout {
+        display: block;
+        padding: 0;
+      }
+
+      section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+      }
+
+      pre {
+        white-space: pre-wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero">
+      <div class="badge">CrashCore / Mihomo · Linux · 无 root 权限</div>
+      <h1>Linux 无 root 权限运行 CrashCore，并让命令行走代理</h1>
+      <p class="subtitle">一份精简流程：下载 CrashCore、准备 country.mmdb、上传本地改好的机场订阅、启动核心、设置命令行代理，并用代理安装 Codex CLI。</p>
+      <div class="summary">
+        <div class="summary-card"><b>工作目录</b>/public/home/freemax/clash</div>
+        <div class="summary-card"><b>示例端口</b>mixed-port: 7893</div>
+        <div class="summary-card"><b>核心原则</b>本地改好 YAML，再上传服务器</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav>
+      <strong>目录</strong>
+      <a href="#scope">适用场景</a>
+      <a href="#dir">1. 创建工作目录</a>
+      <a href="#core">2. 下载 CrashCore</a>
+      <a href="#mmdb">3. 下载 country.mmdb</a>
+      <a href="#yaml">4. 准备 scnet.yaml</a>
+      <a href="#port">5. 本地提前改好端口</a>
+      <a href="#run">6. 手动启动测试</a>
+      <a href="#env">7. 设置当前终端代理</a>
+      <a href="#codex">8. 用代理安装 Codex CLI</a>
+      <a href="#commands">9. 常用命令汇总</a>
+      <a href="#minimal">10. 最小完整流程</a>
+      <a href="#remember">11. 核心记住</a>
+    </nav>
+
+    <main>
+      <section id="scope">
+        <h2>适用场景</h2>
+        <ul>
+          <li>普通 Linux 用户，没有 root 权限。</li>
+          <li>想在服务器上运行 CrashCore / Mihomo。</li>
+          <li>想让 <code class="inline">curl</code>、<code class="inline">git</code>、<code class="inline">npm</code>、安装脚本等命令行工具走代理。</li>
+        </ul>
+        <div class="note">
+          本文路径统一使用 <code class="inline">/public/home/freemax/clash</code>，端口示例使用 <code class="inline">7893</code>。如果你的端口不是 7893，把文中的 7893 换成你的 <code class="inline">mixed-port</code> 端口即可。
+        </div>
+      </section>
+
+      <section id="dir">
+        <h2>1. 创建工作目录</h2>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>mkdir -p /public/home/freemax/clash
+cd /public/home/freemax/clash</code></pre>
+        </div>
+      </section>
+
+      <section id="core">
+        <h2>2. 下载 CrashCore 二进制文件</h2>
+        <p>服务器是 Linux x86_64，所以使用 <code class="inline">clash-linux-amd64.tar.gz</code>。</p>
+
+        <p>GitHub 页面地址是：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>text</span><button class="copy-btn">复制</button></div>
+          <pre><code>https://github.com/juewuy/ShellCrash/blob/update/bin/meta/clash-linux-amd64.tar.gz</code></pre>
+        </div>
+
+        <p>但 <code class="inline">curl</code> 不能直接下载 <code class="inline">blob</code> 页面，要用 raw 地址：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -L -o CrashCore.tar.gz \
+  https://raw.githubusercontent.com/juewuy/ShellCrash/update/bin/meta/clash-linux-amd64.tar.gz</code></pre>
+        </div>
+
+        <p>如果 GitHub raw 下载慢，可以用 CDN：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -L -o CrashCore.tar.gz \
+  https://testingcf.jsdelivr.net/gh/juewuy/ShellCrash@update/bin/meta/clash-linux-amd64.tar.gz</code></pre>
+        </div>
+
+        <p>解压、赋权、检查：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>tar -zxf CrashCore.tar.gz
+chmod +x CrashCore
+ls -lh CrashCore</code></pre>
+        </div>
+
+        <p>如果不知道服务器架构，先看：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>uname -m</code></pre>
+        </div>
+
+        <div class="note">
+          常见对应关系：<br>
+          <code class="inline">x86_64</code> → <code class="inline">clash-linux-amd64.tar.gz</code><br>
+          <code class="inline">aarch64</code> → <code class="inline">clash-linux-arm64.tar.gz</code><br>
+          <code class="inline">armv7l</code> → <code class="inline">clash-linux-armv7.tar.gz</code>
+        </div>
+      </section>
+
+      <section id="mmdb">
+        <h2>3. 下载 country.mmdb</h2>
+        <p>CrashCore / Mihomo 启动时可能会提示：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>log</span><button class="copy-btn">复制</button></div>
+          <pre><code>Can't find MMDB, start download</code></pre>
+        </div>
+
+        <p>如果服务器下载慢，可以提前手动下载 <code class="inline">country.mmdb</code>。</p>
+
+        <p>推荐地址：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -L -o country.mmdb \
+  https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb</code></pre>
+        </div>
+
+        <p>或者 GitHub release 地址：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -L -o country.mmdb \
+  https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb</code></pre>
+        </div>
+
+        <p>检查：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>ls -lh country.mmdb</code></pre>
+        </div>
+      </section>
+
+      <section id="yaml">
+        <h2>4. 准备 scnet.yaml</h2>
+        <p>最简单的方式：</p>
+        <ol>
+          <li>在本地电脑下载机场 Clash / Mihomo 订阅。</li>
+          <li>在本地把 <code class="inline">mixed-port</code> 改好。</li>
+          <li>把配置文件命名为 <code class="inline">scnet.yaml</code>。</li>
+          <li>再上传到服务器。</li>
+        </ol>
+
+        <p>上传：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>scp scnet.yaml freemax@login07:/public/home/freemax/clash/</code></pre>
+        </div>
+      </section>
+
+      <section id="port">
+        <h2>5. 本地提前改好端口</h2>
+        <p>在本地编辑 <code class="inline">scnet.yaml</code>，确认里面有：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>yaml</span><button class="copy-btn">复制</button></div>
+          <pre><code>mixed-port: 7893</code></pre>
+        </div>
+
+        <p>建议也加上：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>yaml</span><button class="copy-btn">复制</button></div>
+          <pre><code>ipv6: false</code></pre>
+        </div>
+
+        <p>控制端口可以保留，例如：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>yaml</span><button class="copy-btn">复制</button></div>
+          <pre><code>external-controller: '127.0.0.1:9091'</code></pre>
+        </div>
+
+        <div class="note">
+          最终上传到服务器的配置文件里，至少应该确认有：<code class="inline">mixed-port: 7893</code> 和 <code class="inline">ipv6: false</code>。
+        </div>
+      </section>
+
+      <section id="run">
+        <h2>6. 手动启动测试</h2>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>/public/home/freemax/clash/CrashCore \
+  -d /public/home/freemax/clash \
+  -f /public/home/freemax/clash/scnet.yaml</code></pre>
+        </div>
+
+        <p>看到类似：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>log</span><button class="copy-btn">复制</button></div>
+          <pre><code>Initial configuration complete</code></pre>
+        </div>
+
+        <p>说明配置加载成功。</p>
+
+        <div class="warn">
+          如果看到 <code class="inline">The `global-client-fingerprint` configuration is deprecated</code>，这是警告，不影响使用。<br>
+          如果看到 <code class="inline">bind: address already in use</code>，说明端口被占用了，需要换一个 <code class="inline">mixed-port</code>。
+        </div>
+      </section>
+
+      <section id="env">
+        <h2>7. 设置当前终端代理</h2>
+        <p>如果只想让当前终端走代理：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>export http_proxy=http://127.0.0.1:7893
+export https_proxy=http://127.0.0.1:7893
+export all_proxy=http://127.0.0.1:7893</code></pre>
+        </div>
+
+        <p>测试：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl ipinfo.io</code></pre>
+        </div>
+
+        <p>取消代理：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>unset http_proxy https_proxy all_proxy</code></pre>
+        </div>
+
+        <div class="note">
+          <code class="inline">curl -x http://127.0.0.1:7893 ...</code> 只对当前这条 curl 生效；<code class="inline">export http_proxy=...</code> 会让当前终端里的后续命令也走代理。
+        </div>
+      </section>
+
+      <section id="codex">
+        <h2>8. 用代理安装 Codex CLI</h2>
+        <p>不要只写：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -x http://127.0.0.1:7893 -fsSL https://chatgpt.com/codex/install.sh | sh</code></pre>
+        </div>
+
+        <p>这种写法只代理了第一层 <code class="inline">curl</code>，安装脚本内部继续下载时，可能不会走代理。</p>
+
+        <p>推荐先设置环境变量：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>export http_proxy=http://127.0.0.1:7893
+export https_proxy=http://127.0.0.1:7893
+export all_proxy=http://127.0.0.1:7893</code></pre>
+        </div>
+
+        <p>然后下载脚本并执行：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -fsSL https://chatgpt.com/codex/install.sh -o install.sh
+sh install.sh</code></pre>
+        </div>
+
+        <p>如果下载中途出现 <code class="inline">curl: (35) Encountered end of file</code>，可以试试强制 HTTP/1.1：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl --http1.1 -fsSL https://chatgpt.com/codex/install.sh -o install.sh
+sh install.sh</code></pre>
+        </div>
+
+        <p>安装完成后，如果不想继续让终端走代理：</p>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>unset http_proxy https_proxy all_proxy</code></pre>
+        </div>
+      </section>
+
+      <section id="commands">
+        <h2>9. 常用命令汇总</h2>
+
+        <h3>进入目录</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>cd /public/home/freemax/clash</code></pre>
+        </div>
+
+        <h3>前台启动</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>/public/home/freemax/clash/CrashCore \
+  -d /public/home/freemax/clash \
+  -f /public/home/freemax/clash/scnet.yaml</code></pre>
+        </div>
+
+        <h3>强制停止</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>pkill -f CrashCore</code></pre>
+        </div>
+
+        <h3>查看是否运行</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>pgrep -af CrashCore</code></pre>
+        </div>
+
+        <h3>测试代理</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>curl -x http://127.0.0.1:7893 ipinfo.io</code></pre>
+        </div>
+
+        <h3>设置代理</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>export http_proxy=http://127.0.0.1:7893
+export https_proxy=http://127.0.0.1:7893
+export all_proxy=http://127.0.0.1:7893</code></pre>
+        </div>
+
+        <h3>取消代理</h3>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash</span><button class="copy-btn">复制</button></div>
+          <pre><code>unset http_proxy https_proxy all_proxy</code></pre>
+        </div>
+      </section>
+
+      <section id="minimal">
+        <h2>10. 最小完整流程</h2>
+        <div class="code-wrap">
+          <div class="code-label"><span>bash · 带中文注释</span><button class="copy-btn">复制</button></div>
+          <pre><code># 创建 CrashCore 工作目录
+mkdir -p /public/home/freemax/clash
+cd /public/home/freemax/clash
+
+# 下载 CrashCore 二进制压缩包
+# 这是 ShellCrash update 分支里的 Linux x86_64 内核包
+curl -L -o CrashCore.tar.gz \
+  https://testingcf.jsdelivr.net/gh/juewuy/ShellCrash@update/bin/meta/clash-linux-amd64.tar.gz
+
+# 解压 CrashCore
+tar -zxf CrashCore.tar.gz
+
+# 给 CrashCore 添加执行权限
+chmod +x CrashCore
+
+# 下载 country.mmdb
+# 避免 CrashCore 启动时自己下载 MMDB 卡住
+curl -L -o country.mmdb \
+  https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb
+
+# 准备 scnet.yaml
+# 推荐在本地电脑提前把机场订阅改好：
+# 1. mixed-port: 7893
+# 2. ipv6: false
+# 3. 保存为 scnet.yaml
+# 然后上传到 /public/home/freemax/clash/
+#
+# 示例上传命令需要在本地电脑执行：
+# scp scnet.yaml freemax@login07:/public/home/freemax/clash/
+
+# 检查当前目录文件
+# 至少应该有 CrashCore、country.mmdb、scnet.yaml
+ls -lh
+
+# 前台启动 CrashCore
+# -d 指定工作目录
+# -f 指定配置文件
+/public/home/freemax/clash/CrashCore \
+  -d /public/home/freemax/clash \
+  -f /public/home/freemax/clash/scnet.yaml
+
+# 如果启动成功，会看到 Initial configuration complete
+# 如果想停止，可以另开一个终端执行：
+# pkill -f CrashCore
+
+# 设置当前终端代理
+# 端口要和 scnet.yaml 里的 mixed-port 保持一致
+export http_proxy=http://127.0.0.1:7893
+export https_proxy=http://127.0.0.1:7893
+export all_proxy=http://127.0.0.1:7893
+
+# 测试代理是否可用
+curl ipinfo.io
+
+# 用代理安装 Codex CLI
+# 先 export，再运行安装脚本，这样脚本内部的下载也会走代理
+curl -fsSL https://chatgpt.com/codex/install.sh -o install.sh
+sh install.sh
+
+# 安装完成后，如果不需要代理，可以取消环境变量
+unset http_proxy https_proxy all_proxy</code></pre>
+        </div>
+      </section>
+
+      <section id="remember">
+        <h2>11. 核心记住</h2>
+        <ul>
+          <li><code class="inline">scnet.yaml</code> 在本地改好再上传，最省事。</li>
+          <li>CrashCore 端口看 <code class="inline">mixed-port</code>。</li>
+          <li>命令行代理用 <code class="inline">export http_proxy</code> / <code class="inline">https_proxy</code> / <code class="inline">all_proxy</code>。</li>
+          <li><code class="inline">curl -x</code> 只代理当前 curl，不一定代理脚本内部的二次下载。</li>
+          <li>安装 Codex 这类脚本时，优先用 <code class="inline">export</code> 方式。</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>生成时间：2026-06-05 · 单页离线 HTML</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.copy-btn').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const code = button.closest('.code-wrap').querySelector('code').innerText;
+        try {
+          await navigator.clipboard.writeText(code);
+          const old = button.textContent;
+          button.textContent = '已复制';
+          setTimeout(() => button.textContent = old, 1100);
+        } catch (e) {
+          button.textContent = '复制失败';
+          setTimeout(() => button.textContent = '复制', 1100);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
