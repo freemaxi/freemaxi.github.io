@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CentOS 7 无 root 安装 Node.js 22 指南</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #171a21;
+      --text: #e8eaf0;
+      --muted: #a8afbd;
+      --accent: #7aa2ff;
+      --code: #101217;
+      --border: #2a2f3a;
+      --ok: #57d68d;
+      --warn: #ffcc66;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 18px 80px;
+    }
+
+    header {
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      line-height: 1.25;
+      margin: 0 0 12px;
+    }
+
+    h2 {
+      margin-top: 40px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 1.45rem;
+    }
+
+    h3 {
+      margin-top: 28px;
+      font-size: 1.15rem;
+    }
+
+    p {
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(122, 162, 255, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(122, 162, 255, 0.3);
+      font-size: 0.85rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      background: var(--code);
+      border: 1px solid var(--border);
+      padding: 2px 5px;
+      border-radius: 5px;
+      color: #d8e2ff;
+    }
+
+    pre {
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    pre code {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: #eef2ff;
+      font-size: 0.92rem;
+    }
+
+    .copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: 1px solid var(--border);
+      background: #202431;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 4px 9px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .copy:hover {
+      background: #2a3040;
+    }
+
+    .ok {
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    .warn {
+      color: var(--warn);
+      font-weight: 600;
+    }
+
+    ul {
+      padding-left: 22px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .toc {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    footer {
+      margin-top: 60px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header>
+      <h1>CentOS 7 无 root 安装 Node.js 22 指南</h1>
+      <p class="muted">
+        适用于 glibc 2.17 老系统，解决官方 Node 20 / 22 报
+        <code>GLIBC_2.27 not found</code>、<code>GLIBC_2.28 not found</code> 的问题。
+      </p>
+      <div>
+        <span class="tag">CentOS 7</span>
+        <span class="tag">glibc 2.17</span>
+        <span class="tag">无 root</span>
+        <span class="tag">Node.js 22</span>
+        <span class="tag">linux-x64-glibc-217</span>
+      </div>
+    </header>
+
+    <section class="card">
+      <h3>核心思路</h3>
+      <p>
+        不使用官方 <code>node-v22.x-linux-x64.tar.xz</code>，而是使用
+        <code>linux-x64-glibc-217</code> 兼容构建版。
+      </p>
+      <p>
+        这个版本适合 CentOS 7 / glibc 2.17 这类老系统，可以在无 root 权限下安装到用户目录。
+      </p>
+    </section>
+
+    <nav class="toc">
+      <a href="#install">一键安装</a>
+      <a href="#verify">检查是否成功</a>
+      <a href="#qwen">安装 qwen-code</a>
+      <a href="#hermes">给 Hermes 使用这个 Node</a>
+      <a href="#troubleshooting">常见问题</a>
+    </nav>
+
+    <section id="install">
+      <h2>一键安装 Node.js 22 glibc 2.17 兼容版</h2>
+
+      <p>直接复制下面整段执行：</p>
+
+      <pre><button class="copy">复制</button><code>mkdir -p ~/.local
+cd ~/.local
+
+rm -rf node22 node-v22.22.3-linux-x64-glibc-217*
+
+curl -LO https://unofficial-builds.nodejs.org/download/release/v22.22.3/node-v22.22.3-linux-x64-glibc-217.tar.xz
+
+tar -xf node-v22.22.3-linux-x64-glibc-217.tar.xz
+
+mv node-v22.22.3-linux-x64-glibc-217 node22
+
+grep -q 'node22/bin' ~/.bashrc || echo 'export PATH="$HOME/.local/node22/bin:$PATH"' >> ~/.bashrc
+
+source ~/.bashrc
+
+which node
+which npm
+node -v
+npm -v</code></pre>
+    </section>
+
+    <section id="verify">
+      <h2>检查是否成功</h2>
+
+      <p>成功后应该看到类似：</p>
+
+      <pre><code>/public/home/freemax/.local/node22/bin/node
+/public/home/freemax/.local/node22/bin/npm
+v22.22.3
+10.9.8</code></pre>
+
+      <p>
+        如果 <code>node -v</code> 显示 <code>v22.22.3</code>，
+        <code>npm -v</code> 显示 <code>10.9.8</code>，说明安装成功。
+      </p>
+
+      <div class="card">
+        <p class="ok">成功标志：</p>
+        <ul>
+          <li><code>node</code> 路径在 <code>~/.local/node22/bin/node</code></li>
+          <li><code>npm</code> 路径在 <code>~/.local/node22/bin/npm</code></li>
+          <li>不再报 <code>GLIBC_2.27 not found</code></li>
+          <li>不再报 <code>GLIBC_2.28 not found</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="qwen">
+      <h2>安装 qwen-code</h2>
+
+      <p>Node 成功后，可以安装 qwen-code：</p>
+
+      <pre><button class="copy">复制</button><code>npm install -g @qwen-code/qwen-code</code></pre>
+
+      <p>检查安装结果：</p>
+
+      <pre><button class="copy">复制</button><code>npm list -g --depth=0 | grep qwen
+which qwen
+which qwen-code
+qwen --version 2&gt;/dev/null || qwen-code --version 2&gt;/dev/null</code></pre>
+
+      <p>启动：</p>
+
+      <pre><button class="copy">复制</button><code>qwen</code></pre>
+    </section>
+
+    <section id="hermes">
+      <h2>给 Hermes 使用这个 Node</h2>
+
+      <p>
+        Hermes 安装器可能会自动下载官方 Node 22，但官方 Node 22 在 CentOS 7 上可能跑不起来。
+        可以把 Hermes 的 Node 指向刚才安装的兼容版 Node。
+      </p>
+
+      <pre><button class="copy">复制</button><code>rm -rf ~/.hermes/node
+
+mkdir -p ~/.hermes
+ln -sfn "$HOME/.local/node22" "$HOME/.hermes/node"
+
+~/.hermes/node/bin/node -v
+~/.hermes/node/bin/npm -v</code></pre>
+
+      <p>然后重新安装 Hermes：</p>
+
+      <pre><button class="copy">复制</button><code>export PATH="$HOME/.local/node22/bin:$PATH"
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</code></pre>
+    </section>
+
+    <section>
+      <h2>不建议升级 npm</h2>
+
+      <p>如果看到：</p>
+
+      <pre><code>New major version of npm available!
+10.9.8 -&gt; 11.x.x</code></pre>
+
+      <p class="warn">
+        不建议急着升级 npm。
+      </p>
+
+      <p>
+        你的老系统上，当前 <code>Node v22.22.3</code> + <code>npm 10.9.8</code>
+        已经可以工作。除非确实遇到 npm bug，否则没必要冒险升级。
+      </p>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>常见问题</h2>
+
+      <h3>1. 还是调用到了系统 Node</h3>
+
+      <p>检查：</p>
+
+      <pre><button class="copy">复制</button><code>which node
+which npm</code></pre>
+
+      <p>如果不是 <code>~/.local/node22/bin/node</code>，说明 PATH 顺序不对。</p>
+
+      <p>临时修复：</p>
+
+      <pre><button class="copy">复制</button><code>export PATH="$HOME/.local/node22/bin:$PATH"</code></pre>
+
+      <p>永久修复：</p>
+
+      <pre><button class="copy">复制</button><code>echo 'export PATH="$HOME/.local/node22/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+
+      <h3>2. 仍然报 GLIBC_2.27 / GLIBC_2.28 not found</h3>
+
+      <p>
+        说明你可能下载了官方 Node 包，而不是 glibc-217 兼容包。
+      </p>
+
+      <p>错误包名通常是：</p>
+
+      <pre><code>node-v22.22.3-linux-x64.tar.xz</code></pre>
+
+      <p>正确包名应该是：</p>
+
+      <pre><code>node-v22.22.3-linux-x64-glibc-217.tar.xz</code></pre>
+
+      <h3>3. npm 全局命令找不到</h3>
+
+      <p>检查 npm 全局 bin：</p>
+
+      <pre><button class="copy">复制</button><code>npm bin -g</code></pre>
+
+      <p>一般应该是：</p>
+
+      <pre><code>~/.local/node22/bin</code></pre>
+
+      <p>确保这个目录在 PATH 里：</p>
+
+      <pre><button class="copy">复制</button><code>echo $PATH | tr ':' '\n' | grep node22</code></pre>
+    </section>
+
+    <footer>
+      <p>
+        总结：在 CentOS 7 / glibc 2.17 / 无 root 环境中，优先使用
+        <code>linux-x64-glibc-217</code> 兼容版 Node，而不是官方 Node 二进制。
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    document.querySelectorAll(".copy").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const code = button.nextElementSibling.innerText;
+        try {
+          await navigator.clipboard.writeText(code);
+          const old = button.innerText;
+          button.innerText = "已复制";
+          setTimeout(() => {
+            button.innerText = old;
+          }, 1200);
+        } catch (e) {
+          button.innerText = "复制失败";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
