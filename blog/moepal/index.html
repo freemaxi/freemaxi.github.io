@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Deepin 环境下为 MoePal 手动添加夸克 Cookie</title>
+  <style>
+    :root {
+      --bg: #f3f7fc;
+      --surface: #ffffff;
+      --surface-soft: #f7faff;
+      --text: #182335;
+      --muted: #617087;
+      --line: #dce5f1;
+      --blue: #1268dc;
+      --blue-dark: #0b4fae;
+      --blue-soft: #eaf3ff;
+      --green: #16845b;
+      --green-soft: #e8f7f0;
+      --amber: #946100;
+      --amber-soft: #fff6db;
+      --red: #b33535;
+      --red-soft: #fff0f0;
+      --code: #111b2c;
+      --shadow: 0 16px 42px rgba(32, 62, 103, 0.09);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, #e3efff 0, transparent 31rem),
+        var(--bg);
+      font-family:
+        "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei",
+        system-ui, -apple-system, sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hero {
+      padding: 64px 24px 48px;
+      color: #fff;
+      background:
+        linear-gradient(125deg, rgba(8, 56, 128, 0.98), rgba(18, 104, 220, 0.94)),
+        #0b4fae;
+    }
+
+    .hero-inner {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      color: #eaf3ff;
+      background: rgba(255, 255, 255, 0.09);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 18px 0 14px;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.16;
+      letter-spacing: -0.025em;
+    }
+
+    .hero p {
+      max-width: 800px;
+      margin: 0;
+      color: #dceaff;
+      font-size: 17px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .chip {
+      padding: 7px 12px;
+      border-radius: 10px;
+      color: #eff6ff;
+      background: rgba(255, 255, 255, 0.11);
+      font-size: 13px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 32px;
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto 72px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 10px 30px rgba(32, 62, 103, 0.06);
+      backdrop-filter: blur(10px);
+    }
+
+    .toc strong {
+      display: block;
+      margin-bottom: 10px;
+      color: #30415a;
+      font-size: 14px;
+    }
+
+    .toc ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .toc li {
+      margin: 7px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    main {
+      min-width: 0;
+    }
+
+    section {
+      margin-bottom: 22px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      scroll-margin-top: 20px;
+    }
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 18px;
+      font-size: 25px;
+      line-height: 1.3;
+    }
+
+    .step-number {
+      display: inline-grid;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--blue);
+      font-size: 15px;
+      box-shadow: 0 7px 16px rgba(18, 104, 220, 0.23);
+    }
+
+    h3 {
+      margin: 24px 0 10px;
+      color: #293a53;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    ul,
+    ol {
+      padding-left: 24px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    code {
+      padding: 0.12em 0.35em;
+      border-radius: 5px;
+      color: var(--blue-dark);
+      background: var(--blue-soft);
+      font-family: "JetBrains Mono", "Noto Sans Mono CJK SC", monospace;
+      font-size: 0.91em;
+    }
+
+    .code-wrap {
+      position: relative;
+      margin: 14px 0;
+    }
+
+    pre {
+      overflow: auto;
+      margin: 0;
+      padding: 20px;
+      border: 1px solid #24344d;
+      border-radius: 14px;
+      color: #dce9f9;
+      background: var(--code);
+      line-height: 1.6;
+      tab-size: 4;
+    }
+
+    pre code {
+      padding: 0;
+      color: inherit;
+      background: transparent;
+      font-size: 13px;
+      white-space: pre;
+    }
+
+    .copy {
+      position: absolute;
+      z-index: 2;
+      top: 9px;
+      right: 9px;
+      padding: 6px 10px;
+      border: 1px solid #44536a;
+      border-radius: 8px;
+      color: #dce9f9;
+      background: #233149;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .copy:hover {
+      background: #30415d;
+    }
+
+    .notice {
+      margin: 16px 0;
+      padding: 15px 17px;
+      border-left: 4px solid var(--blue);
+      border-radius: 10px;
+      color: #31435e;
+      background: var(--blue-soft);
+    }
+
+    .notice.warning {
+      border-left-color: #e1a000;
+      color: #684900;
+      background: var(--amber-soft);
+    }
+
+    .notice.danger {
+      border-left-color: var(--red);
+      color: #7a2e2e;
+      background: var(--red-soft);
+    }
+
+    .notice.success {
+      border-left-color: var(--green);
+      color: #126345;
+      background: var(--green-soft);
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .schema {
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #31435e;
+      background: var(--surface-soft);
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      margin: 0;
+      padding: 11px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-soft);
+    }
+
+    .checklist li::before {
+      margin-right: 8px;
+      color: var(--green);
+      content: "✓";
+      font-weight: 800;
+    }
+
+    details {
+      margin: 12px 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface-soft);
+    }
+
+    summary {
+      padding: 14px 16px;
+      color: #293a53;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    details > div {
+      padding: 0 16px 14px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding: 20px 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+
+      .toc ol {
+        columns: 2;
+      }
+
+      .checklist {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .hero {
+        padding: 42px 20px 36px;
+      }
+
+      .layout {
+        width: min(100% - 20px, 1120px);
+        margin-top: 18px;
+      }
+
+      section {
+        padding: 21px 18px;
+      }
+
+      .toc ol {
+        columns: 1;
+      }
+
+      h2 {
+        font-size: 21px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .hero {
+        padding: 28px 0;
+        color: #111;
+        background: #fff;
+        border-bottom: 2px solid #333;
+      }
+
+      .hero p,
+      .eyebrow,
+      .chip {
+        color: #333;
+      }
+
+      .layout {
+        display: block;
+        width: 100%;
+        margin: 0;
+      }
+
+      .toc,
+      .copy {
+        display: none;
+      }
+
+      section {
+        break-inside: avoid;
+        margin: 0;
+        padding: 18px 0;
+        border: 0;
+        border-bottom: 1px solid #bbb;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <span class="eyebrow">DEEPIN · 统信 Wine · MoePal</span>
+      <h1>手动添加夸克网盘 Cookie 详细教程</h1>
+      <p>
+        绕过 Wine 环境中无法正常显示的登录网页，直接把 Chrome 中已经登录的
+        夸克认证信息安全写入 MoePal。
+      </p>
+      <div class="chips">
+        <span class="chip">适用于 MoePal v4.2</span>
+        <span class="chip">不依赖 WebView2 登录页面</span>
+        <span class="chip">带备份与恢复步骤</span>
+        <span class="chip">Cookie 不进入 Shell 历史</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="教程目录">
+      <strong>教程目录</strong>
+      <ol>
+        <li><a href="#principle">工作原理</a></li>
+        <li><a href="#prepare">准备与定位数据库</a></li>
+        <li><a href="#cookie">从 Chrome 获取 Cookie</a></li>
+        <li><a href="#stop">关闭 MoePal</a></li>
+        <li><a href="#write">安全写入 Cookie</a></li>
+        <li><a href="#verify">检查写入结果</a></li>
+        <li><a href="#restart">启动并验证</a></li>
+        <li><a href="#troubleshooting">常见问题</a></li>
+        <li><a href="#restore">恢复与更新</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <section>
+        <h2><span class="step-number">!</span>开始前的安全说明</h2>
+        <div class="notice danger">
+          <strong>Cookie 就是登录凭证</strong>
+          获得完整 Cookie 的人，可能在不输入密码的情况下访问你的夸克账号。
+          不要把 Cookie 发给别人、粘贴到聊天工具、上传网盘或放进截图。
+        </div>
+        <ul class="checklist">
+          <li>Chrome 中已经登录夸克网盘</li>
+          <li>操作期间不要退出 Chrome 登录</li>
+          <li>写数据库前先关闭 MoePal</li>
+          <li>写入前必须备份原数据库</li>
+        </ul>
+        <p>
+          本教程使用 Python 的隐藏输入和 SQLite 参数绑定。粘贴的 Cookie
+          不会显示在终端，也不会出现在 Shell 命令历史里。
+        </p>
+      </section>
+
+      <section id="principle">
+        <h2><span class="step-number">1</span>理解 MoePal 的认证格式</h2>
+        <p>
+          MoePal 没有把夸克登录信息保存在 Wine 注册表、Gecko 或 WebView2
+          目录中，而是保存在自己的 SQLite 数据库：
+          <code>cloud_storage_auth.db</code>。
+        </p>
+
+        <div class="schema">
+          <table>
+            <thead>
+              <tr>
+                <th>数据库字段</th>
+                <th>夸克所需内容</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>drive_type</code></td>
+                <td><code>quark</code></td>
+                <td>必须为小写</td>
+              </tr>
+              <tr>
+                <td><code>auth_data</code></td>
+                <td><code>{"cookie":"完整 Cookie"}</code></td>
+                <td>必须是合法 JSON，不能直接写原始 Cookie</td>
+              </tr>
+              <tr>
+                <td><code>created_at</code></td>
+                <td>ISO 8601 时间</td>
+                <td>首次创建时间</td>
+              </tr>
+              <tr>
+                <td><code>updated_at</code></td>
+                <td>ISO 8601 时间</td>
+                <td>最后更新时间</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>正确的认证对象形式如下：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>{
+  "cookie": "__pus=……; __puus=……; 其他Cookie=……"
+}</code></pre>
+        </div>
+
+        <div class="notice warning">
+          <strong>不要手工拼接 JSON 字符串</strong>
+          Cookie 中如果出现引号或特殊字符，直接拼接可能破坏 JSON。本教程中的
+          Python 程序会自动进行 JSON 转义，并使用数据库参数安全写入。
+        </div>
+      </section>
+
+      <section id="prepare">
+        <h2><span class="step-number">2</span>准备环境并定位数据库</h2>
+
+        <h3>当前电脑上的数据库位置</h3>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>/home/max/.local/share/deepin-wine-bottles/bottles/Moepal4.2.0.execaa7b95225ec7345b951fe6883435943/drive_c/users/max/AppData/Roaming/com.moecloud.helper/MoePal/MoePal/data/cloud_storage_auth.db</code></pre>
+        </div>
+
+        <h3>其他电脑如何查找</h3>
+        <p>
+          MoePal 版本或统信 Wine bottle ID 不同时，目录名称可能不同。可以执行：
+        </p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>find "$HOME/.local/share/deepin-wine-bottles/bottles" \
+  -type f \
+  -name 'cloud_storage_auth.db' \
+  -print 2&gt;/dev/null</code></pre>
+        </div>
+
+        <p>为后续命令设置路径变量：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>MOEPAL_AUTH_DB='/home/max/.local/share/deepin-wine-bottles/bottles/Moepal4.2.0.execaa7b95225ec7345b951fe6883435943/drive_c/users/max/AppData/Roaming/com.moecloud.helper/MoePal/MoePal/data/cloud_storage_auth.db'</code></pre>
+        </div>
+
+        <p>检查文件是否存在：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>test -f "$MOEPAL_AUTH_DB" \
+  &amp;&amp; echo '数据库存在' \
+  || echo '数据库不存在，请重新检查路径'</code></pre>
+        </div>
+      </section>
+
+      <section id="cookie">
+        <h2><span class="step-number">3</span>从 Chrome 获取完整 Cookie</h2>
+
+        <div class="notice warning">
+          <strong>不要使用 document.cookie</strong>
+          浏览器控制台中的 <code>document.cookie</code> 可能读取不到
+          <code>HttpOnly</code> Cookie。应该从真实网络请求的 Request Headers
+          中复制。
+        </div>
+
+        <ol>
+          <li>
+            用 Google Chrome 打开
+            <a href="https://pan.quark.cn/" rel="noreferrer">https://pan.quark.cn/</a>，
+            完成登录并确认能够看到自己的文件。
+          </li>
+          <li>
+            按 <code>F12</code> 或 <code>Ctrl + Shift + I</code> 打开开发者工具。
+          </li>
+          <li>进入“网络”或 <code>Network</code> 选项卡。</li>
+          <li>按 <code>Ctrl + R</code> 刷新夸克页面。</li>
+          <li>
+            在过滤框搜索 <code>account/info</code> 或
+            <code>file/sort</code>。
+          </li>
+          <li>
+            选择一个发送到 <code>drive-pc.quark.cn</code> 或
+            <code>pan.quark.cn</code> 的 API 请求。
+          </li>
+          <li>
+            打开 <code>Headers → Request Headers → Cookie</code>。
+          </li>
+          <li>右键 Cookie 的值并复制。</li>
+        </ol>
+
+        <p>复制出来的内容通常类似：</p>
+        <div class="code-wrap">
+          <pre><code>__pus=……; __puus=……; tfstk=……; __uid=……; 其他Cookie=……</code></pre>
+        </div>
+
+        <ul class="checklist">
+          <li>Cookie 是一整行</li>
+          <li>包含多个“名称=值”</li>
+          <li>包含 __puus= 或 __pus=</li>
+          <li>复制的是 Request Cookie</li>
+        </ul>
+
+        <p>
+          粘贴时可以包含开头的 <code>Cookie:</code>，本教程的写入程序会自动去掉；
+          但建议只复制字段值。
+        </p>
+      </section>
+
+      <section id="stop">
+        <h2><span class="step-number">4</span>完全关闭 MoePal</h2>
+        <p>
+          如果 MoePal 在写入期间仍然运行，可能出现数据库锁定，或者程序退出时用旧数据
+          覆盖新数据。优先从 MoePal 菜单正常退出。
+        </p>
+
+        <p>当前安装也可以使用下面的命令结束 MoePal：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>gdbus call --session \
+  --dest com.deepin.DeepinWineLauncher \
+  --object-path /com/deepin/Manager/Bottles \
+  --method com.deepin.Manager.Bottles.killProgram \
+  'Moepal4.2.0.execaa7b95225ec7345b951fe6883435943' \
+  '75119de5-8897-4dff-ba70-453245c71a88'</code></pre>
+        </div>
+
+        <p>检查主程序是否已经结束：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>pgrep -af 'C:\\Program Files\\MoePal\\MoePal.exe'</code></pre>
+        </div>
+
+        <div class="notice success">
+          命令没有输出，表示 MoePal 主程序已经退出，可以继续写数据库。
+        </div>
+      </section>
+
+      <section id="write">
+        <h2><span class="step-number">5</span>备份并安全写入 Cookie</h2>
+        <p>
+          下面的程序会完成 Cookie 检查、数据库备份、JSON 转换、参数化写入和权限收紧。
+          Cookie 在粘贴时不会显示。
+        </p>
+
+        <div class="notice">
+          <strong>粘贴方法</strong>
+          运行后出现 Cookie 提示时，按 <code>Ctrl + Shift + V</code> 粘贴，
+          然后按回车。屏幕上没有字符回显是正常现象。
+        </div>
+
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>python3 - "$MOEPAL_AUTH_DB" &lt;&lt;'PY'
+import datetime
+import getpass
+import json
+import os
+import shutil
+import sqlite3
+import sys
+from pathlib import Path
+
+db_path = Path(sys.argv[1])
+
+if not db_path.is_file():
+    raise SystemExit(f"找不到 MoePal 数据库：{db_path}")
+
+cookie = getpass.getpass(
+    "请粘贴完整的夸克 Cookie，然后按回车（内容不会显示）："
+).strip()
+
+if cookie.lower().startswith("cookie:"):
+    cookie = cookie.split(":", 1)[1].strip()
+
+if "\n" in cookie or "\r" in cookie:
+    raise SystemExit("Cookie 中包含换行，请重新复制为一整行")
+
+if "__puus=" not in cookie and "__pus=" not in cookie:
+    raise SystemExit(
+        "没有找到 __puus 或 __pus，可能复制的不是完整夸克 Cookie"
+    )
+
+if len(cookie) &lt; 120:
+    raise SystemExit("Cookie 长度异常，可能没有复制完整")
+
+timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+backup_path = db_path.with_name(
+    f"{db_path.name}.before-quark-{timestamp}.bak"
+)
+
+shutil.copy2(db_path, backup_path)
+os.chmod(backup_path, 0o600)
+
+now = (
+    datetime.datetime.now(datetime.timezone.utc)
+    .isoformat(timespec="microseconds")
+    .replace("+00:00", "Z")
+)
+
+auth_data = json.dumps(
+    {"cookie": cookie},
+    ensure_ascii=False,
+    separators=(",", ":"),
+)
+
+connection = sqlite3.connect(db_path)
+
+try:
+    connection.execute("BEGIN IMMEDIATE")
+    connection.execute(
+        """
+        INSERT INTO cloud_auth
+            (drive_type, auth_data, created_at, updated_at)
+        VALUES
+            ('quark', ?, ?, ?)
+        ON CONFLICT(drive_type) DO UPDATE SET
+            auth_data = excluded.auth_data,
+            updated_at = excluded.updated_at
+        """,
+        (auth_data, now, now),
+    )
+    connection.commit()
+
+    result = connection.execute(
+        """
+        SELECT drive_type, json_valid(auth_data), length(auth_data)
+          FROM cloud_auth
+         WHERE drive_type = 'quark'
+        """
+    ).fetchone()
+finally:
+    connection.close()
+
+os.chmod(db_path, 0o600)
+
+if not result or result[1] != 1:
+    raise SystemExit("写入后的 JSON 校验失败")
+
+print("写入成功")
+print(f"网盘类型：{result[0]}")
+print(f"认证 JSON 长度：{result[2]} 字符")
+print(f"原数据库备份：{backup_path}")
+PY</code></pre>
+        </div>
+
+        <p>成功时会看到类似结果：</p>
+        <div class="code-wrap">
+          <pre><code>写入成功
+网盘类型：quark
+认证 JSON 长度：1262 字符
+原数据库备份：……cloud_storage_auth.db.before-quark-时间.bak</code></pre>
+        </div>
+      </section>
+
+      <section id="verify">
+        <h2><span class="step-number">6</span>检查写入结果</h2>
+        <p>以下检查只显示结构和长度，不会输出 Cookie：</p>
+
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>sqlite3 "$MOEPAL_AUTH_DB" "
+SELECT
+    drive_type,
+    json_valid(auth_data) AS json_valid,
+    json_type(auth_data, '\$.cookie') AS cookie_type,
+    length(auth_data) AS auth_length
+FROM cloud_auth
+WHERE drive_type = 'quark';
+"</code></pre>
+        </div>
+
+        <p>正确结果类似：</p>
+        <div class="code-wrap">
+          <pre><code>quark|1|text|1262</code></pre>
+        </div>
+
+        <div class="schema">
+          <table>
+            <thead>
+              <tr>
+                <th>输出</th>
+                <th>含义</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>quark</code></td><td>网盘类型正确</td></tr>
+              <tr><td><code>1</code></td><td>auth_data 是合法 JSON</td></tr>
+              <tr><td><code>text</code></td><td>cookie 字段是字符串</td></tr>
+              <tr><td>最后的数字</td><td>认证 JSON 的字符数</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>检查文件权限：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>stat -c '%a %U:%G %n' "$MOEPAL_AUTH_DB"</code></pre>
+        </div>
+
+        <p>推荐权限为 <code>600</code>。如有需要可执行：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>chmod 600 "$MOEPAL_AUTH_DB"</code></pre>
+        </div>
+      </section>
+
+      <section id="restart">
+        <h2><span class="step-number">7</span>启动 MoePal 并验证</h2>
+        <p>可以点击桌面图标，或者执行：</p>
+
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>deepin-wine-builder \
+  'deepinwine://Moepal4.2.0.execaa7b95225ec7345b951fe6883435943/75119de5-8897-4dff-ba70-453245c71a88'</code></pre>
+        </div>
+
+        <p>启动后依次进入：</p>
+        <div class="notice success">
+          <strong>我的网盘 → 夸克网盘</strong>
+          Cookie 有效时，MoePal 会直接显示夸克文件列表，不再要求打开登录网页。
+        </div>
+
+        <p>
+          如果出现 <code>another instance is running</code>，通常表示统信 Wine
+          启动管理器已经存在，不一定是启动失败。观察 MoePal 窗口是否出现即可。
+        </p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2><span class="step-number">8</span>常见问题与排查</h2>
+
+        <details open>
+          <summary>MoePal 仍然显示“未登录”</summary>
+          <div>
+            <ul>
+              <li>确认复制的是 Request Headers 中的 Cookie。</li>
+              <li>确认 Cookie 包含 <code>__puus=</code> 或 <code>__pus=</code>。</li>
+              <li>确认没有只复制一个 Cookie，而是复制了完整请求头。</li>
+              <li>确认写入前 MoePal 已经完全退出。</li>
+              <li>确认写入的是当前 bottle 使用的数据库。</li>
+              <li>重新启动 MoePal，不要只返回上一页。</li>
+            </ul>
+          </div>
+        </details>
+
+        <details>
+          <summary>数据库显示写入成功，但文件列表为空</summary>
+          <div>
+            <p>
+              先回到 Chrome 打开 <code>https://pan.quark.cn/</code>。如果 Chrome
+              也要求重新登录，说明 Cookie 已失效，需要重新登录并再次复制。
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>提示 database is locked</summary>
+          <div>
+            <p>
+              MoePal 或其 Wine 子进程仍在访问数据库。关闭 MoePal，再使用
+              <code>pgrep</code> 检查主程序，确认退出后重试。
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>提示 no such table: cloud_auth</summary>
+          <div>
+            <p>
+              通常是选错数据库，或者 MoePal 尚未初始化“我的网盘”功能。
+              先启动一次 MoePal、进入“我的网盘”，退出后重新查找数据库。
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>为什么不能直接执行一条带 Cookie 的 sqlite3 命令？</summary>
+          <div>
+            <p>
+              把 Cookie 直接写在 Shell 命令中会进入终端历史，还可能短暂出现在进程参数里。
+              此外，Cookie 内的引号和特殊字符可能破坏 SQL。隐藏输入加参数绑定更安全。
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <section id="restore">
+        <h2><span class="step-number">9</span>恢复备份与后续更新</h2>
+
+        <h3>恢复修改前的数据库</h3>
+        <p>先关闭 MoePal，再把写入程序生成的 <code>.bak</code> 文件复制回来：</p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>install -m 600 \
+  '/完整路径/cloud_storage_auth.db.before-quark-时间.bak' \
+  "$MOEPAL_AUTH_DB"</code></pre>
+        </div>
+
+        <h3>Cookie 到期后更新</h3>
+        <ol>
+          <li>在 Chrome 中重新登录夸克。</li>
+          <li>从新的 API 请求复制 Request Cookie。</li>
+          <li>关闭 MoePal。</li>
+          <li>重新运行“安全写入 Cookie”程序。</li>
+          <li>启动 MoePal 并检查文件列表。</li>
+        </ol>
+
+        <h3>当前电脑已有的自动同步工具</h3>
+        <p>
+          如果以后不想手动复制，这台电脑已经有一个本地同步脚本。它会从 Chrome
+          系统密钥环读取 Cookie，并在写入前验证登录状态。
+        </p>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>/home/max/.local/share/deepin-wine-bottles/tools/sync-moepal-quark-cookie.py --check</code></pre>
+        </div>
+        <div class="code-wrap">
+          <button class="copy" type="button">复制</button>
+          <pre><code>/home/max/.local/share/deepin-wine-bottles/tools/sync-moepal-quark-cookie.py</code></pre>
+        </div>
+
+        <div class="notice warning">
+          即使使用自动同步脚本，也必须先在 Chrome 中保持夸克已登录。Cookie
+          失效后无法绕过夸克的正常登录验证。
+        </div>
+      </section>
+
+      <div class="footer">
+        本文档为单文件离线 HTML，不加载外部脚本、字体或统计服务。
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const copyText = async (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.focus();
+        area.select();
+        document.execCommand("copy");
+        area.remove();
+      };
+
+      document.querySelectorAll(".copy").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.parentElement.querySelector("code");
+          if (!code) return;
+          const oldText = button.textContent;
+          try {
+            await copyText(code.textContent);
+            button.textContent = "已复制";
+          } catch {
+            button.textContent = "复制失败";
+          }
+          setTimeout(() => {
+            button.textContent = oldText;
+          }, 1400);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
